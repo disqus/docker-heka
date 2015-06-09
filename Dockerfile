@@ -1,12 +1,12 @@
 FROM golang:1.4
 
-ENV BUILD_DEPS cmake python-sphinx protobuf-compiler patch
+ENV BUILD_DEPS cmake python-sphinx protobuf-compiler patch libgeoip-dev
 
 ENV HEKA_VERSION 0.9.2
 
 COPY plugin_loader.cmake /tmp/plugin_loader.cmake
 
-RUN apt-get update && apt-get install -y $BUILD_DEPS --no-install-recommends \
+RUN apt-get update && apt-get install -y libgeoip1 $BUILD_DEPS --no-install-recommends \
     && git clone https://github.com/mozilla-services/heka --depth=1 --branch=v$HEKA_VERSION /usr/src/heka \
     && mv /tmp/plugin_loader.cmake /usr/src/heka/cmake \
     && cd /usr/src/heka/ && ./build.sh 2>&1 \
