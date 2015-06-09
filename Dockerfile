@@ -1,15 +1,13 @@
 FROM golang:1.4
 
-RUN apt-get update && apt-get install -y \
-            cmake python-sphinx protobuf-compiler patch \
-            --no-install-recommends \
-        && rm -rf /var/lib/apt/lists/*
+ENV BUILD_DEPS cmake python-sphinx protobuf-compiler patch
 
 ENV HEKA_VERSION 0.9.2
 
 COPY plugin_loader.cmake /tmp/plugin_loader.cmake
 
-RUN git clone https://github.com/mozilla-services/heka --depth=1 --branch=v$HEKA_VERSION /usr/src/heka \
+RUN apt-get update && apt-get install -y $BUILD_DEPS --no-install-recommends \
+    && git clone https://github.com/mozilla-services/heka --depth=1 --branch=v$HEKA_VERSION /usr/src/heka \
     && mv /tmp/plugin_loader.cmake /usr/src/heka/cmake \
     && cd /usr/src/heka/ && ./build.sh 2>&1 \
     && mv /usr/src/heka/build/heka/bin/* /usr/local/bin \
@@ -26,7 +24,9 @@ RUN git clone https://github.com/mozilla-services/heka --depth=1 --branch=v$HEKA
     && cp /usr/src/heka/sandbox/lua/modules/* /usr/share/heka/lua_modules \
     && cp /usr/src/heka/build/heka/modules/*.lua /usr/share/heka/lua_modules \
     && cp -r /usr/src/heka/dasher/* /usr/share/heka/dasher \
-    && rm -rf /usr/src/heka
+    && rm -rf /usr/src/heka \
+    && apt-get purge -y $BUILD_DEPS && apt-get autoremove -y \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY dashboard.toml /etc/heka.d/
 
